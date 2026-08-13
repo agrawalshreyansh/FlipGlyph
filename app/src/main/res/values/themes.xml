@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.FlipGlyph" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

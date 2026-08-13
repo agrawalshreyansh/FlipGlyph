@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">FlipGlyph</string>
+    <string name="notification_channel_name">Flip monitoring</string>
+    <string name="notification_title">FlipGlyph is watching for a flip</string>
+    <string name="notification_text">Turns on the Glyph Matrix clock when you place the phone face-down.</string>
+</resources>
