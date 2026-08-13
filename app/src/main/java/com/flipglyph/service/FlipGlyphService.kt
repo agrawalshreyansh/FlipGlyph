@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import com.flipglyph.FlipGlyphApplication
 import com.flipglyph.R
@@ -13,15 +14,23 @@ import kotlinx.coroutines.launch
 
 private const val NOTIFICATION_CHANNEL_ID = "flipglyph_monitoring"
 private const val NOTIFICATION_ID = 1
+private const val WAKE_LOCK_TAG = "FlipGlyph:orientationMonitoring"
 
 /**
  * Keeps orientation monitoring alive while the screen is locked and the app isn't visible.
  * Only running while FlipGlyph is enabled — the notification is the visible, user-facing
  * explanation of why that's necessary, per Android's background execution limits.
+ *
+ * A partial wake lock is required here, not optional: the accelerometer is a non-wakeup
+ * sensor, so once the CPU deep-sleeps (screen off for a bit) its events stop being delivered
+ * even though this foreground service is still alive. The wake lock keeps the CPU awake —
+ * screen stays off, battery cost is the tradeoff for face-down detection actually working
+ * when the phone is locked, which is the whole point of the app.
  */
 class FlipGlyphService : Service() {
 
     private lateinit var app: FlipGlyphApplication
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -29,11 +38,19 @@ class FlipGlyphService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification())
         app.applicationScope.launch { app.glyphController.initialize() }
         app.orientationDetector.start()
+
+        val powerManager = getSystemService(PowerManager::class.java)
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
+            setReferenceCounted(false)
+            acquire()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
 
     override fun onDestroy() {
+        wakeLock?.let { if (it.isHeld) it.release() }
+        wakeLock = null
         app.orientationDetector.stop()
         app.applicationScope.launch { app.glyphController.shutdown() }
         super.onDestroy()

@@ -33,7 +33,9 @@ object GlyphClockRenderer {
         ' ' to listOf("000", "000", "000", "000", "000"),
     )
 
-    fun render(time: LocalTime, clockFormat: ClockFormat, brightness: Int, showColon: Boolean = true): Bitmap {
+    // Default off: on a 13-row matrix the colon dots read as a visible third line between
+    // the hour and minute blocks, breaking the intended 2-line stacked layout.
+    fun render(time: LocalTime, clockFormat: ClockFormat, brightness: Int, showColon: Boolean = false): Bitmap {
         val grid = Array(MATRIX_SIZE) { BooleanArray(MATRIX_SIZE) }
 
         val (h1, h2) = hourDigits(time, clockFormat)

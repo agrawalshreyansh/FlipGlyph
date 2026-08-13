@@ -40,17 +40,18 @@ class GlyphClockRendererTest {
     }
 
     @Test
-    fun `static colon is lit by default`() {
+    fun `colon is off by default so hour and minute blocks read as two lines`() {
         val bitmap = GlyphClockRenderer.render(LocalTime.of(10, 30), ClockFormat.H24, brightness = 255)
         val colonColumn = 6 // BLOCK_LEFT(3) + DIGIT_WIDTH(3)
-        assertNotEquals(Color.BLACK, bitmap.getPixel(colonColumn, 5))
-        assertNotEquals(Color.BLACK, bitmap.getPixel(colonColumn, 7))
+        assertEquals(Color.BLACK, bitmap.getPixel(colonColumn, 5))
+        assertEquals(Color.BLACK, bitmap.getPixel(colonColumn, 7))
     }
 
     @Test
-    fun `colon can be omitted for blinking`() {
-        val bitmap = GlyphClockRenderer.render(LocalTime.of(10, 30), ClockFormat.H24, brightness = 255, showColon = false)
+    fun `colon can be opted into`() {
+        val bitmap = GlyphClockRenderer.render(LocalTime.of(10, 30), ClockFormat.H24, brightness = 255, showColon = true)
         val colonColumn = 6
-        assertEquals(Color.BLACK, bitmap.getPixel(colonColumn, 5))
+        assertNotEquals(Color.BLACK, bitmap.getPixel(colonColumn, 5))
+        assertNotEquals(Color.BLACK, bitmap.getPixel(colonColumn, 7))
     }
 }
