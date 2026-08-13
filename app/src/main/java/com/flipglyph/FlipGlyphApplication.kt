@@ -7,13 +7,11 @@ import com.flipglyph.data.AppSettings
 import com.flipglyph.data.SettingsRepository
 import com.flipglyph.domain.FlipGlyphEngine
 import com.flipglyph.glyph.NothingGlyphController
-import com.flipglyph.sensors.DeviceOrientation
 import com.flipglyph.sensors.OrientationDetector
 import com.flipglyph.service.FlipGlyphService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /** Minimal manual DI: a handful of process-scoped singletons, no framework needed. */
@@ -53,16 +51,15 @@ class FlipGlyphApplication : Application() {
             }
         }
 
-        // Proximity protection: while pocketed, don't let a FACE_DOWN reading activate the Matrix.
+        // NOTE: proximityProtectionEnabled is intentionally not wired to anything here.
+        // It used to force FACE_DOWN to UNKNOWN whenever the proximity sensor read "near",
+        // meant to catch pocket insertion. But a phone resting face-down on a table reads
+        // "near" too — the screen-side sensor is pressed against the surface — so that gate
+        // was indistinguishable from the app's core use case and silently broke it. Proximity
+        // alone can't tell "table" from "pocket"; needs a better signal before this is worth
+        // reintroducing.
         applicationScope.launch {
-            combine(orientationDetector.orientation, orientationDetector.diagnostics) { orientation, diagnostics ->
-                orientation to diagnostics
-            }.collect { (orientation, diagnostics) ->
-                val suppressed = currentSettings.proximityProtectionEnabled &&
-                    diagnostics.nearProximity &&
-                    orientation == DeviceOrientation.FACE_DOWN
-                engine.onOrientationChanged(if (suppressed) DeviceOrientation.UNKNOWN else orientation)
-            }
+            orientationDetector.orientation.collect { orientation -> engine.onOrientationChanged(orientation) }
         }
     }
 }
