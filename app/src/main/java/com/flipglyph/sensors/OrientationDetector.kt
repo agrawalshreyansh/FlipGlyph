@@ -6,6 +6,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.util.Log
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,6 +62,31 @@ class OrientationDetector(
         gravityInitialized = false
         stabilizer.reset()
         _orientation.value = DeviceOrientation.UNKNOWN
+    }
+
+    /**
+     * A brief, self-contained accelerometer read for PRESS_TO_PEEK's idle state: no continuous
+     * registration, no stabilizer, no shared mutable gravity state — just "what's the orientation
+     * right now". Caller owns keeping the CPU awake for the duration (this doesn't hold a wake lock).
+     */
+    suspend fun sampleOnce(windowMs: Long = 200L): DeviceOrientation {
+        val sensor = accelerometer ?: return DeviceOrientation.UNKNOWN
+        var zSum = 0f
+        var count = 0
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent) {
+                zSum += event.values[2]
+                count++
+            }
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+        }
+        sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_FASTEST)
+        try {
+            delay(windowMs)
+        } finally {
+            sensorManager.unregisterListener(listener)
+        }
+        return if (count == 0) DeviceOrientation.UNKNOWN else classify(zSum / count)
     }
 
     override fun onSensorChanged(event: SensorEvent) {

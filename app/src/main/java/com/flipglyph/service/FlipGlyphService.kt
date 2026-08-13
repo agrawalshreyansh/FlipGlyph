@@ -14,33 +14,46 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.flipglyph.FlipGlyphApplication
 import com.flipglyph.R
+import com.flipglyph.domain.ActivationMode
+import com.flipglyph.domain.GlyphState
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 private const val NOTIFICATION_CHANNEL_ID = "flipglyph_monitoring"
 private const val NOTIFICATION_ID = 1
 private const val WAKE_LOCK_TAG = "FlipGlyph:orientationMonitoring"
+private const val PEEK_WAKE_LOCK_TAG = "FlipGlyph:peekSample"
+private const val PEEK_WAKE_LOCK_TIMEOUT_MS = 2_000L
 
 /**
  * Keeps orientation monitoring alive while the screen is locked and the app isn't visible.
  * Only running while FlipGlyph is enabled — the notification is the visible, user-facing
  * explanation of why that's necessary, per Android's background execution limits.
  *
- * A partial wake lock is required here, not optional: the accelerometer is a non-wakeup
- * sensor, so once the CPU deep-sleeps (screen off for a bit) its events stop being delivered
- * even though this foreground service is still alive. The wake lock keeps the CPU awake —
- * screen stays off, battery cost is the tradeoff for face-down detection actually working
- * when the phone is locked, which is the whole point of the app.
+ * Continuous accelerometer monitoring needs a partial wake lock: it's a non-wakeup sensor, so
+ * once the CPU deep-sleeps its events stop being delivered even with this foreground service
+ * alive. That's a real, deliberate battery cost for FLIP_TO_ACTIVATE/STAY_ACTIVE_WHILE_FLIPPED,
+ * since the sensor IS the trigger for those modes — no way around always-on sensing there.
+ *
+ * PRESS_TO_PEEK doesn't have that constraint: its trigger is a power-button press (observed as
+ * a screen on/off broadcast), not a sensor transition. So it runs continuous monitoring + the
+ * wake lock only while the Matrix is actually ACTIVE (to still catch an immediate face-up
+ * pickup during the peek window) and takes a brief one-shot sample — its own short wake lock,
+ * no continuous registration — at the moment of the button press otherwise. The CPU can deep
+ * sleep the rest of the time, which is most of the time.
  */
 class FlipGlyphService : Service() {
 
     private lateinit var app: FlipGlyphApplication
     private var wakeLock: PowerManager.WakeLock? = null
+    private var monitoringJob: Job? = null
 
-    // Drives ActivationMode.PRESS_TO_PEEK: a power-button (or other wake-key) press is not
-    // observable via SensorManager, so it's picked up as a screen on/off transition instead.
     private val screenStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            app.engine.onPeekRequested()
+            if (app.currentSettings.activationMode != ActivationMode.PRESS_TO_PEEK) return
+            app.applicationScope.launch { sampleAndPeek() }
         }
     }
 
@@ -49,13 +62,6 @@ class FlipGlyphService : Service() {
         app = application as FlipGlyphApplication
         startForeground(NOTIFICATION_ID, buildNotification())
         app.applicationScope.launch { app.glyphController.initialize() }
-        app.orientationDetector.start()
-
-        val powerManager = getSystemService(PowerManager::class.java)
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
-            setReferenceCounted(false)
-            acquire()
-        }
 
         ContextCompat.registerReceiver(
             this,
@@ -66,20 +72,55 @@ class FlipGlyphService : Service() {
             },
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
+
+        monitoringJob = app.applicationScope.launch {
+            combine(app.settingsRepository.settings, app.engine.state) { settings, state ->
+                settings.activationMode != ActivationMode.PRESS_TO_PEEK || state.glyphState == GlyphState.ACTIVE
+            }.distinctUntilChanged().collect { needsContinuousMonitoring ->
+                if (needsContinuousMonitoring) startContinuousMonitoring() else stopContinuousMonitoring()
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
 
     override fun onDestroy() {
         unregisterReceiver(screenStateReceiver)
-        wakeLock?.let { if (it.isHeld) it.release() }
-        wakeLock = null
-        app.orientationDetector.stop()
+        monitoringJob?.cancel()
+        stopContinuousMonitoring()
         app.applicationScope.launch { app.glyphController.shutdown() }
         super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    private suspend fun sampleAndPeek() {
+        val powerManager = getSystemService(PowerManager::class.java)
+        val peekLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, PEEK_WAKE_LOCK_TAG)
+        peekLock.acquire(PEEK_WAKE_LOCK_TIMEOUT_MS) // self-releasing safety net
+        try {
+            val orientation = app.orientationDetector.sampleOnce()
+            app.engine.onPeekRequested(orientation)
+        } finally {
+            if (peekLock.isHeld) peekLock.release()
+        }
+    }
+
+    private fun startContinuousMonitoring() {
+        if (wakeLock?.isHeld == true) return
+        app.orientationDetector.start()
+        val powerManager = getSystemService(PowerManager::class.java)
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
+            setReferenceCounted(false)
+            acquire()
+        }
+    }
+
+    private fun stopContinuousMonitoring() {
+        app.orientationDetector.stop()
+        wakeLock?.let { if (it.isHeld) it.release() }
+        wakeLock = null
+    }
 
     private fun buildNotification(): Notification {
         val manager = getSystemService(NotificationManager::class.java)

@@ -44,10 +44,16 @@ class FlipGlyphEngine(
         }
     }
 
-    /** Power-button (or other wake-key) press while already lying face-down, for PRESS_TO_PEEK mode. */
-    fun onPeekRequested() {
+    /**
+     * Power-button (or other wake-key) press, for PRESS_TO_PEEK mode. [orientation] is a
+     * fresh one-shot sample taken at the moment of the press — PRESS_TO_PEEK deliberately
+     * doesn't run continuous sensing while idle (battery), so there's no cached state to
+     * trust here the way [onOrientationChanged] can.
+     */
+    fun onPeekRequested(orientation: DeviceOrientation) {
         if (settings().activationMode != ActivationMode.PRESS_TO_PEEK) return
-        if (_state.value.orientation != DeviceOrientation.FACE_DOWN) return
+        _state.value = _state.value.copy(orientation = orientation)
+        if (orientation != DeviceOrientation.FACE_DOWN) return
         activate()
     }
 
