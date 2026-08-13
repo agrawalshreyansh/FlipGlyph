@@ -12,6 +12,8 @@ enum class GlyphState {
 enum class ActivationMode {
     FLIP_TO_ACTIVATE,
     STAY_ACTIVE_WHILE_FLIPPED,
+    /** A face-up/face-down transition alone does nothing; a power-button press while already face-down peeks the clock. */
+    PRESS_TO_PEEK,
 }
 
 data class FlipGlyphState(

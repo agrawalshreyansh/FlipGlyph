@@ -4,10 +4,14 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.flipglyph.FlipGlyphApplication
 import com.flipglyph.R
 import kotlinx.coroutines.launch
@@ -32,6 +36,14 @@ class FlipGlyphService : Service() {
     private lateinit var app: FlipGlyphApplication
     private var wakeLock: PowerManager.WakeLock? = null
 
+    // Drives ActivationMode.PRESS_TO_PEEK: a power-button (or other wake-key) press is not
+    // observable via SensorManager, so it's picked up as a screen on/off transition instead.
+    private val screenStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            app.engine.onPeekRequested()
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         app = application as FlipGlyphApplication
@@ -44,11 +56,22 @@ class FlipGlyphService : Service() {
             setReferenceCounted(false)
             acquire()
         }
+
+        ContextCompat.registerReceiver(
+            this,
+            screenStateReceiver,
+            IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_ON)
+                addAction(Intent.ACTION_SCREEN_OFF)
+            },
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
 
     override fun onDestroy() {
+        unregisterReceiver(screenStateReceiver)
         wakeLock?.let { if (it.isHeld) it.release() }
         wakeLock = null
         app.orientationDetector.stop()

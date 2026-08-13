@@ -141,6 +141,58 @@ class FlipGlyphEngineTest {
     }
 
     @Test
+    fun `press to peek mode ignores the flip transition itself`() {
+        settings = settings.copy(activationMode = ActivationMode.PRESS_TO_PEEK)
+        engine.onOrientationChanged(DeviceOrientation.FACE_DOWN)
+
+        assertEquals(GlyphState.OFF, engine.state.value.glyphState)
+        assertEquals(0, controller.showClockCalls)
+    }
+
+    @Test
+    fun `press to peek mode activates on peek request while face down`() {
+        settings = settings.copy(activationMode = ActivationMode.PRESS_TO_PEEK, timeoutSeconds = 10)
+        engine.onOrientationChanged(DeviceOrientation.FACE_DOWN)
+        engine.onPeekRequested()
+
+        assertEquals(GlyphState.ACTIVE, engine.state.value.glyphState)
+        assertTrue(engine.state.value.timeoutAt != null)
+    }
+
+    @Test
+    fun `press to peek request while face up does nothing`() {
+        settings = settings.copy(activationMode = ActivationMode.PRESS_TO_PEEK)
+        engine.onOrientationChanged(DeviceOrientation.FACE_UP)
+        engine.onPeekRequested()
+
+        assertEquals(GlyphState.OFF, engine.state.value.glyphState)
+    }
+
+    @Test
+    fun `press to peek still turns off immediately on face up`() {
+        settings = settings.copy(activationMode = ActivationMode.PRESS_TO_PEEK, timeoutSeconds = 10)
+        engine.onOrientationChanged(DeviceOrientation.FACE_DOWN)
+        engine.onPeekRequested()
+        engine.onOrientationChanged(DeviceOrientation.FACE_UP)
+        advance(0)
+
+        assertEquals(GlyphState.OFF, engine.state.value.glyphState)
+        assertEquals(1, controller.clearCalls)
+    }
+
+    @Test
+    fun `peek request ignored outside press to peek mode`() {
+        engine.onOrientationChanged(DeviceOrientation.FACE_DOWN)
+        advance(0)
+        val callsAfterFlip = controller.showClockCalls
+
+        engine.onPeekRequested()
+        advance(0)
+
+        assertEquals(callsAfterFlip, controller.showClockCalls)
+    }
+
+    @Test
     fun `test glyph shows the clock without requiring face down`() {
         engine.testGlyph()
         advance(0)

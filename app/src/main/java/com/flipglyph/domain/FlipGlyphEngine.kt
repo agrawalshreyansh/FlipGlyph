@@ -37,10 +37,18 @@ class FlipGlyphEngine(
         if (orientation == previous) return
 
         when (orientation) {
-            DeviceOrientation.FACE_DOWN -> activate()
+            // In PRESS_TO_PEEK mode the flip itself is not a trigger — only onPeekRequested() is.
+            DeviceOrientation.FACE_DOWN -> if (settings().activationMode != ActivationMode.PRESS_TO_PEEK) activate()
             DeviceOrientation.FACE_UP -> deactivate()
             DeviceOrientation.UNKNOWN -> Unit
         }
+    }
+
+    /** Power-button (or other wake-key) press while already lying face-down, for PRESS_TO_PEEK mode. */
+    fun onPeekRequested() {
+        if (settings().activationMode != ActivationMode.PRESS_TO_PEEK) return
+        if (_state.value.orientation != DeviceOrientation.FACE_DOWN) return
+        activate()
     }
 
     /** Shows the current clock immediately, bypassing orientation/enabled checks, for the Test Glyph button. */
