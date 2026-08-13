@@ -16,4 +16,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "FlipGlyph"
 include(":app")
-include(":glyphsdk-stub")

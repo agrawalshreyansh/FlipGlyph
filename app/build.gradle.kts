@@ -59,15 +59,8 @@ android {
 }
 
 dependencies {
-    // Nothing Glyph Matrix SDK.
-    // Real vendor AAR (not fetchable by this build; Nothing distributes it directly to
-    // registered developers) goes at app/libs/GlyphMatrixSDK.aar. Once you have it:
-    //   1. drop it in app/libs/
-    //   2. swap the line below for: implementation(files("libs/GlyphMatrixSDK.aar"))
-    //   3. delete the :glyphsdk-stub module (dev-only compile stand-in, same package/class
-    //      shape as the documented SDK surface — verify method signatures against the real
-    //      AAR's javadoc, since they were not independently confirmed).
-    implementation(project(":glyphsdk-stub"))
+    // Real Nothing Glyph Matrix Developer Kit AAR (vendor-distributed).
+    implementation(files("libs/glyph-matrix-sdk-2.0.aar"))
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")

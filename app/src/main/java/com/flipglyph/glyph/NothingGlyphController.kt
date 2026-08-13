@@ -19,9 +19,9 @@ import kotlin.coroutines.resume
 private const val TAG = "FlipGlyph.Glyph"
 
 /**
- * The only class that knows Nothing SDK implementation details. Every call is guarded —
- * a Glyph failure must never crash the app, and the Matrix can be silently reclaimed by
- * the system Glyph Toy carousel at any time.
+ * The only class that knows Nothing SDK implementation details (verified against the real
+ * glyph-matrix-sdk-2.0.aar). Every call is guarded — a Glyph failure must never crash the
+ * app, and the Matrix can be silently reclaimed by the system Glyph Toy carousel at any time.
  */
 class NothingGlyphController(
     private val context: Context,
@@ -85,9 +85,9 @@ class NothingGlyphController(
                 .setPosition(0, 0)
                 .setBrightness(brightness)
                 .build()
-            val frame = GlyphMatrixFrame.Builder(context)
+            val frame = GlyphMatrixFrame.Builder()
                 .addTop(obj)
-                .build()
+                .build(context)
             mgr.setAppMatrixFrame(frame.render())
         }.onFailure { e ->
             Log.w(TAG, "setAppMatrixFrame failed: ${e.javaClass.simpleName}")

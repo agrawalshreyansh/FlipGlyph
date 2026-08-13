@@ -13,3 +13,7 @@ glyphsdk-stub/build/
 *.apk
 *.aab
 .kotlin/
+
+# Vendor SDK: proprietary, Nothing-distributed. Drop your own copy locally.
+app/libs/*.aar
+app/libs/.DS_Store
