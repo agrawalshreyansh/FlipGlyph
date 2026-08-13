@@ -2,6 +2,7 @@ package com.flipglyph.ui
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,7 +17,9 @@ private enum class Screen { HOME, SETTINGS, ABOUT }
 
 @Composable
 fun FlipGlyphApp(viewModel: FlipGlyphViewModel) {
-    MaterialTheme {
+    // Always dark — this app is a companion to a black-background LED matrix, not something
+    // that should follow the system's light/dark setting.
+    MaterialTheme(colorScheme = darkColorScheme()) {
         Surface(modifier = Modifier, color = MaterialTheme.colorScheme.background) {
             var screen by remember { mutableStateOf(Screen.HOME) }
 

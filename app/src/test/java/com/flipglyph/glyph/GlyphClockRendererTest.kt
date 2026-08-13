@@ -40,18 +40,26 @@ class GlyphClockRendererTest {
     }
 
     @Test
-    fun `colon is off by default so hour and minute blocks read as two lines`() {
+    fun `colon is off by default so hour and minute blocks sit almost flush`() {
         val bitmap = GlyphClockRenderer.render(LocalTime.of(10, 30), ClockFormat.H24, brightness = 255)
         val colonColumn = 6 // BLOCK_LEFT(3) + DIGIT_WIDTH(3)
-        assertEquals(Color.BLACK, bitmap.getPixel(colonColumn, 5))
-        assertEquals(Color.BLACK, bitmap.getPixel(colonColumn, 7))
+        assertEquals(Color.BLACK, bitmap.getPixel(colonColumn, GlyphClockRenderer.MATRIX_SIZE / 2))
     }
 
     @Test
     fun `colon can be opted into`() {
         val bitmap = GlyphClockRenderer.render(LocalTime.of(10, 30), ClockFormat.H24, brightness = 255, showColon = true)
         val colonColumn = 6
-        assertNotEquals(Color.BLACK, bitmap.getPixel(colonColumn, 5))
-        assertNotEquals(Color.BLACK, bitmap.getPixel(colonColumn, 7))
+        assertNotEquals(Color.BLACK, bitmap.getPixel(colonColumn, GlyphClockRenderer.MATRIX_SIZE / 2))
+    }
+
+    @Test
+    fun `hour and minute blocks are only one row apart`() {
+        // Regression: a wide gap between blocks used to read as digits being cut off.
+        val bitmap = GlyphClockRenderer.render(LocalTime.of(11, 11), ClockFormat.H24, brightness = 255)
+        val gapRow = GlyphClockRenderer.MATRIX_SIZE / 2
+        for (x in 0 until GlyphClockRenderer.MATRIX_SIZE) {
+            assertEquals(Color.BLACK, bitmap.getPixel(x, gapRow))
+        }
     }
 }

@@ -16,15 +16,29 @@ android {
         versionName = "0.1.0-mvp"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Only the physical Phone (4a) Pro is supported, and it's arm64 — drop the other
+        // ABI slices of every native lib pulled in transitively (Compose, DataStore, etc).
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
     }
 
     buildTypes {
         debug {
+            // Debuggable + minify together silently disable R8's actual optimization pass —
+            // there's no size win here, just a slower build. Keep debug fast; assembleRelease
+            // (signed with the debug keystore below, so it's still directly sideloadable) is
+            // the build that's actually shrunk.
             isMinifyEnabled = false
             manifestPlaceholders["nothingApiKey"] = "test"
         }
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
+            // Not distributed via Play Store — reuse the debug keystore so this stays a
+            // plain sideloadable APK instead of requiring a dedicated release signing setup.
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             manifestPlaceholders["nothingApiKey"] = ""
         }
@@ -70,7 +84,6 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.09.03"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
 
@@ -85,5 +98,4 @@ dependencies {
 
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    debugImplementation("androidx.compose.ui:ui-tooling")
 }

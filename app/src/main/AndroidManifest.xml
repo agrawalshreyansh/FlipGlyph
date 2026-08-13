@@ -14,10 +14,11 @@
         android:theme="@style/Theme.FlipGlyph"
         android:supportsRtl="true">
 
-        <!-- Dev-only: Nothing's debug bridge; do not ship a real key. -->
+        <!-- Debug builds only (see manifestPlaceholders in app/build.gradle.kts): the
+             release build strips this to empty rather than shipping the dev/test key. -->
         <meta-data
             android:name="NothingKey"
-            android:value="test" />
+            android:value="${nothingApiKey}" />
 
         <activity
             android:name=".MainActivity"

@@ -33,9 +33,7 @@ class SettingsRepositoryTest {
         repository.setClockFormat(ClockFormat.H12)
         repository.setBrightness(128)
         repository.setActivationMode(ActivationMode.STAY_ACTIVE_WHILE_FLIPPED)
-        repository.setBatterySaverEnabled(false)
         repository.setStartOnBoot(false)
-        repository.setProximityProtectionEnabled(false)
 
         val settings = repository.settings.first()
 
@@ -46,9 +44,7 @@ class SettingsRepositoryTest {
                 clockFormat = ClockFormat.H12,
                 brightness = 128,
                 activationMode = ActivationMode.STAY_ACTIVE_WHILE_FLIPPED,
-                batterySaverEnabled = false,
                 startOnBoot = false,
-                proximityProtectionEnabled = false,
             ),
             settings,
         )

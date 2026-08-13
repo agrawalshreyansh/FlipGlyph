@@ -11,9 +11,7 @@ data class AppSettings(
     val clockFormat: ClockFormat = ClockFormat.H24,
     val brightness: Int = 255,
     val activationMode: ActivationMode = ActivationMode.FLIP_TO_ACTIVATE,
-    val batterySaverEnabled: Boolean = true,
     val startOnBoot: Boolean = true,
-    val proximityProtectionEnabled: Boolean = true,
 ) {
     companion object {
         val TIMEOUT_OPTIONS_SECONDS = listOf(5, 10, 30, 60, 0) // 0 = Never

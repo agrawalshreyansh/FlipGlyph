@@ -79,22 +79,6 @@ fun SettingsScreen(viewModel: FlipGlyphViewModel, onOpenAbout: () -> Unit, onBac
                     Switch(checked = settings.startOnBoot, onCheckedChange = viewModel::setStartOnBoot)
                 },
             )
-            ListItem(
-                headlineContent = { Text("Proximity protection") },
-                supportingContent = { Text("Ignore face-down readings while pocketed") },
-                trailingContent = {
-                    Switch(
-                        checked = settings.proximityProtectionEnabled,
-                        onCheckedChange = viewModel::setProximityProtectionEnabled,
-                    )
-                },
-            )
-            ListItem(
-                headlineContent = { Text("Battery saver") },
-                trailingContent = {
-                    Switch(checked = settings.batterySaverEnabled, onCheckedChange = viewModel::setBatterySaverEnabled)
-                },
-            )
 
             SectionHeader("Advanced")
             ListItem(

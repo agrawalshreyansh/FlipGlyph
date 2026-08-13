@@ -22,9 +22,7 @@ class SettingsRepository(private val context: Context) {
         val CLOCK_FORMAT = stringPreferencesKey("clock_format")
         val BRIGHTNESS = intPreferencesKey("brightness")
         val ACTIVATION_MODE = stringPreferencesKey("activation_mode")
-        val BATTERY_SAVER_ENABLED = booleanPreferencesKey("battery_saver_enabled")
         val START_ON_BOOT = booleanPreferencesKey("start_on_boot")
-        val PROXIMITY_PROTECTION_ENABLED = booleanPreferencesKey("proximity_protection_enabled")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { prefs ->
@@ -37,9 +35,7 @@ class SettingsRepository(private val context: Context) {
             brightness = prefs[Keys.BRIGHTNESS] ?: defaults.brightness,
             activationMode = prefs[Keys.ACTIVATION_MODE]?.let { runCatching { ActivationMode.valueOf(it) }.getOrNull() }
                 ?: defaults.activationMode,
-            batterySaverEnabled = prefs[Keys.BATTERY_SAVER_ENABLED] ?: defaults.batterySaverEnabled,
             startOnBoot = prefs[Keys.START_ON_BOOT] ?: defaults.startOnBoot,
-            proximityProtectionEnabled = prefs[Keys.PROXIMITY_PROTECTION_ENABLED] ?: defaults.proximityProtectionEnabled,
         )
     }
 
@@ -48,8 +44,5 @@ class SettingsRepository(private val context: Context) {
     suspend fun setClockFormat(value: ClockFormat) = context.dataStore.edit { it[Keys.CLOCK_FORMAT] = value.name }
     suspend fun setBrightness(value: Int) = context.dataStore.edit { it[Keys.BRIGHTNESS] = value }
     suspend fun setActivationMode(value: ActivationMode) = context.dataStore.edit { it[Keys.ACTIVATION_MODE] = value.name }
-    suspend fun setBatterySaverEnabled(value: Boolean) = context.dataStore.edit { it[Keys.BATTERY_SAVER_ENABLED] = value }
     suspend fun setStartOnBoot(value: Boolean) = context.dataStore.edit { it[Keys.START_ON_BOOT] = value }
-    suspend fun setProximityProtectionEnabled(value: Boolean) =
-        context.dataStore.edit { it[Keys.PROXIMITY_PROTECTION_ENABLED] = value }
 }

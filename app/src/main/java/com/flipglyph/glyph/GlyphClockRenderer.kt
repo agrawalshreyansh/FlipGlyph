@@ -14,23 +14,24 @@ object GlyphClockRenderer {
 
     const val MATRIX_SIZE = 13
     private const val DIGIT_WIDTH = 3
-    private const val DIGIT_HEIGHT = 5
+    private const val DIGIT_HEIGHT = 6
     private const val DIGIT_GAP = 1
     private val BLOCK_LEFT = (MATRIX_SIZE - (DIGIT_WIDTH * 2 + DIGIT_GAP)) / 2 // = 3
 
-    // 3x5 pixel digits, one string per row, '1' = lit.
+    // 3x6 pixel digits, one string per row, '1' = lit. Taller than the matrix's spare rows
+    // strictly need, so hour/minute blocks sit almost flush — a 1-row gap, not 3.
     private val DIGITS: Map<Char, List<String>> = mapOf(
-        '0' to listOf("111", "101", "101", "101", "111"),
-        '1' to listOf("010", "110", "010", "010", "111"),
-        '2' to listOf("111", "001", "111", "100", "111"),
-        '3' to listOf("111", "001", "111", "001", "111"),
-        '4' to listOf("101", "101", "111", "001", "001"),
-        '5' to listOf("111", "100", "111", "001", "111"),
-        '6' to listOf("111", "100", "111", "101", "111"),
-        '7' to listOf("111", "001", "001", "001", "001"),
-        '8' to listOf("111", "101", "111", "101", "111"),
-        '9' to listOf("111", "101", "111", "001", "111"),
-        ' ' to listOf("000", "000", "000", "000", "000"),
+        '0' to listOf("111", "101", "101", "101", "101", "111"),
+        '1' to listOf("010", "110", "010", "010", "010", "111"),
+        '2' to listOf("111", "001", "001", "111", "100", "111"),
+        '3' to listOf("111", "001", "011", "001", "001", "111"),
+        '4' to listOf("101", "101", "101", "111", "001", "001"),
+        '5' to listOf("111", "100", "111", "001", "001", "111"),
+        '6' to listOf("111", "100", "111", "101", "101", "111"),
+        '7' to listOf("111", "001", "001", "010", "010", "010"),
+        '8' to listOf("111", "101", "111", "101", "101", "111"),
+        '9' to listOf("111", "101", "111", "001", "001", "111"),
+        ' ' to listOf("000", "000", "000", "000", "000", "000"),
     )
 
     // Default off: on a 13-row matrix the colon dots read as a visible third line between
@@ -80,9 +81,7 @@ object GlyphClockRenderer {
 
     private fun drawColon(grid: Array<BooleanArray>) {
         val col = BLOCK_LEFT + DIGIT_WIDTH // gap column between the two hour/minute digits
-        val midRow = MATRIX_SIZE / 2
-        grid[midRow - 1][col] = true
-        grid[midRow + 1][col] = true
+        grid[MATRIX_SIZE / 2][col] = true // single row of headroom between the two blocks
     }
 
     private fun toBitmap(grid: Array<BooleanArray>, brightness: Int): Bitmap {

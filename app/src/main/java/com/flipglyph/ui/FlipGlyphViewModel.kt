@@ -37,9 +37,7 @@ class FlipGlyphViewModel(application: Application) : AndroidViewModel(applicatio
     fun setClockFormat(value: ClockFormat) = update { it.setClockFormat(value) }
     fun setBrightness(value: Int) = update { it.setBrightness(value) }
     fun setActivationMode(value: ActivationMode) = update { it.setActivationMode(value) }
-    fun setBatterySaverEnabled(value: Boolean) = update { it.setBatterySaverEnabled(value) }
     fun setStartOnBoot(value: Boolean) = update { it.setStartOnBoot(value) }
-    fun setProximityProtectionEnabled(value: Boolean) = update { it.setProximityProtectionEnabled(value) }
 
     fun testGlyph() = app.engine.testGlyph()
 
