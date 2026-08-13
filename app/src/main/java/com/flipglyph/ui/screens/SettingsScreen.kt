@@ -45,7 +45,7 @@ fun SettingsScreen(viewModel: FlipGlyphViewModel, onOpenAbout: () -> Unit, onBac
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text("SETTINGS") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -99,7 +99,7 @@ fun SettingsScreen(viewModel: FlipGlyphViewModel, onOpenAbout: () -> Unit, onBac
 @Composable
 private fun SectionHeader(title: String) {
     Text(
-        title,
+        title.uppercase(),
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 4.dp),

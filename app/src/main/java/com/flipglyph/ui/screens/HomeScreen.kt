@@ -2,11 +2,14 @@
 
 package com.flipglyph.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -23,10 +26,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
 import com.flipglyph.domain.GlyphState
 import com.flipglyph.sensors.DeviceOrientation
 import com.flipglyph.ui.FlipGlyphViewModel
+import com.flipglyph.ui.theme.NothingColors
 
 @Composable
 fun HomeScreen(viewModel: FlipGlyphViewModel, onOpenSettings: () -> Unit) {
@@ -36,7 +43,7 @@ fun HomeScreen(viewModel: FlipGlyphViewModel, onOpenSettings: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("FlipGlyph") },
+                title = { Text("FLIPGLYPH") },
                 actions = {
                     IconButton(onClick = onOpenSettings) {
                         Icon(Icons.Filled.Settings, contentDescription = "Settings")
@@ -55,20 +62,25 @@ fun HomeScreen(viewModel: FlipGlyphViewModel, onOpenSettings: () -> Unit) {
         ) {
             if (!viewModel.isDeviceSupported) {
                 Text(
-                    "FlipGlyph currently supports Nothing Phone (4a) Pro only.",
+                    "FLIPGLYPH CURRENTLY SUPPORTS NOTHING PHONE (4A) PRO ONLY.",
                     color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelLarge,
                 )
             }
 
             Text(
-                if (settings.enabled) "Enabled" else "Disabled",
-                style = MaterialTheme.typography.titleMedium,
+                if (settings.enabled) "ENABLED" else "DISABLED",
+                style = MaterialTheme.typography.labelLarge,
+                color = if (settings.enabled) NothingColors.Red else MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            OrientationGlyph(orientation = engineState.orientation, active = engineState.glyphState == GlyphState.ACTIVE)
+            Box(contentAlignment = Alignment.Center) {
+                DotMatrixBackdrop(active = engineState.glyphState == GlyphState.ACTIVE)
+                OrientationGlyph(orientation = engineState.orientation, active = engineState.glyphState == GlyphState.ACTIVE)
+            }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Enable FlipGlyph", style = MaterialTheme.typography.bodyLarge)
+                Text("ENABLE FLIPGLYPH", style = MaterialTheme.typography.labelLarge)
                 Switch(
                     checked = settings.enabled,
                     onCheckedChange = viewModel::setEnabled,
@@ -81,7 +93,7 @@ fun HomeScreen(viewModel: FlipGlyphViewModel, onOpenSettings: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 enabled = viewModel.isDeviceSupported,
             ) {
-                Text("Test Glyph")
+                Text("TEST GLYPH")
             }
         }
     }
@@ -90,9 +102,40 @@ fun HomeScreen(viewModel: FlipGlyphViewModel, onOpenSettings: () -> Unit) {
 @Composable
 private fun OrientationGlyph(orientation: DeviceOrientation, active: Boolean) {
     val label = when (orientation) {
-        DeviceOrientation.FACE_DOWN -> if (active) "Face-down · glyph active" else "Face-down"
-        DeviceOrientation.FACE_UP -> "Face-up"
-        DeviceOrientation.UNKNOWN -> "—"
+        DeviceOrientation.FACE_DOWN -> if (active) "FACE-DOWN · ACTIVE" else "FACE-DOWN"
+        DeviceOrientation.FACE_UP -> "FACE-UP"
+        DeviceOrientation.UNKNOWN -> "— — —"
     }
-    Text(label, style = MaterialTheme.typography.displaySmall)
+    Text(
+        label,
+        style = MaterialTheme.typography.displaySmall,
+        color = if (active) NothingColors.Red else MaterialTheme.colorScheme.onBackground,
+        modifier = Modifier.padding(32.dp),
+    )
+}
+
+/** A quiet nod to the physical Glyph Matrix this app drives — an original dot grid, not a copy of it. */
+@Composable
+private fun DotMatrixBackdrop(active: Boolean) {
+    val dotColor = if (active) NothingColors.Red.copy(alpha = 0.35f) else NothingColors.Divider
+    Canvas(modifier = Modifier.fillMaxWidth().height(120.dp)) {
+        val columns = 13
+        val rows = 5
+        val cellWidth = size.width / columns
+        val cellHeight = size.height / rows
+        val dotRadius = minOf(cellWidth, cellHeight) * 0.12f
+        for (row in 0 until rows) {
+            for (col in 0 until columns) {
+                drawRoundRect(
+                    color = dotColor,
+                    topLeft = Offset(
+                        col * cellWidth + cellWidth / 2 - dotRadius,
+                        row * cellHeight + cellHeight / 2 - dotRadius,
+                    ),
+                    size = Size(dotRadius * 2, dotRadius * 2),
+                    cornerRadius = CornerRadius(dotRadius),
+                )
+            }
+        }
+    }
 }

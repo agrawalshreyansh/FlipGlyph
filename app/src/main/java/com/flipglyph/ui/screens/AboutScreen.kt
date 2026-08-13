@@ -41,7 +41,7 @@ fun AboutScreen(viewModel: FlipGlyphViewModel, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("About") },
+                title = { Text("ABOUT") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -57,7 +57,7 @@ fun AboutScreen(viewModel: FlipGlyphViewModel, onBack: () -> Unit) {
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Device support", style = MaterialTheme.typography.titleMedium)
+            Text("DEVICE SUPPORT", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Text(
                 if (viewModel.isDeviceSupported) {
                     "Nothing Phone (4a) Pro detected."
@@ -66,13 +66,13 @@ fun AboutScreen(viewModel: FlipGlyphViewModel, onBack: () -> Unit) {
                 },
             )
 
-            Text("SDK status", style = MaterialTheme.typography.titleMedium)
+            Text("SDK STATUS", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Text(describeAvailability(availability))
 
-            Text("Version", style = MaterialTheme.typography.titleMedium)
+            Text("VERSION", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Text("${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
 
-            Text("Developer", style = MaterialTheme.typography.titleMedium)
+            Text("DEVELOPER", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Text(DEVELOPER_NAME)
             Text(
                 DEVELOPER_EMAIL,
